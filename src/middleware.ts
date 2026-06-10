@@ -35,6 +35,7 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
                             request.nextUrl.pathname.startsWith('/picks') ||
                             request.nextUrl.pathname.startsWith('/leaderboard') ||
+                            request.nextUrl.pathname.startsWith('/leagues') ||
                             request.nextUrl.pathname.startsWith('/admin')
 
   if (!user && isProtectedRoute) {

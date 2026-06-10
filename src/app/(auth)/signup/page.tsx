@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SignupForm from './SignupForm'
 
 const PREVIEW_PICKS = [
   { event: 'Super Bowl LXI winner', type: 'Pre-Season', pts: 15 },
@@ -55,51 +56,7 @@ export default function SignupPage() {
             <p className="text-sm text-zinc-500">Create your account and start picking.</p>
           </div>
 
-          <form className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="username" className="text-sm font-medium text-zinc-700">Username</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                autoComplete="username"
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-950 focus:bg-white focus:outline-none transition-colors"
-                placeholder="yourhandle"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-zinc-700">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-950 focus:bg-white focus:outline-none transition-colors"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-zinc-700">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-950 focus:bg-white focus:outline-none transition-colors"
-                placeholder="8+ characters"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-zinc-950 py-3 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors"
-            >
-              Create account
-            </button>
-          </form>
+          <SignupForm />
 
           <p className="text-center text-sm text-zinc-500">
             Already have an account?{' '}

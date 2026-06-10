@@ -59,20 +59,33 @@ Short-window, event-specific picks that open and close around a specific moment.
 
 ## Scoring
 
-*[Mechanics in draft — to be finalized before Season 1 lock]*
+**Formula:** `points = base_points × confidence × bonus_multiplier`
 
 **Base point values by window:**
 - Pre-season pick correct: **15 pts**
 - Monthly pick correct: **10 pts**
 - Pop prop correct: **5 pts**
 
-**Bonus windows:** Certain months with dense event clusters trigger a bonus multiplier. Correct picks in a bonus window earn 1.5× the standard value.
+**Confidence multiplier:** Each player may boost picks before the window locks.
+- Up to **15 picks** per season may be marked **2×** confidence
+- Up to **5 picks** per season may be marked **3×** confidence
+- Unmarked picks score at **1×** (default)
+
+Example: A correct Pre-Season pick at 3× confidence in a bonus window = 15 × 3 × 1.5 = **67.5 pts**
+
+**Bonus windows:** Certain months with dense event clusters trigger a 1.5× multiplier. The multiplier applies per-event (only events flagged as bonus window), not to the whole month.
 
 **Verification types:**
 - **Automated (A):** Result pulled from an official API or data source. Points credited within 24 hours of event completion.
 - **Manual (M):** Commissioner verifies the result. Points credited within 48 hours.
 
 **Proper props:** Events marked as research-hard/niche carry the same point values but count toward a "Proper Props" completion badge at season end.
+
+**Tiebreaker** (applied in order):
+1. Total points (higher wins)
+2. Accuracy % (higher wins)
+3. Total picks made (more picks wins — rewards commitment)
+4. Signup date (earlier signup wins)
 
 ---
 

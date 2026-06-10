@@ -1,67 +1,89 @@
-const FILTER_TABS = ['All', 'Pre-Season', 'Monthly', 'Pop Props'] as const
+import { createClient } from '@/lib/supabase/server'
+import PicksList from './PicksList'
+import type { Event, Pick, EventWithUserPick, PickDistribution } from '@/lib/types/database'
+import { CONFIDENCE_BUDGET } from '@/lib/types/database'
 
-export default function PicksPage() {
+export default async function PicksPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  let eventsWithPicks: EventWithUserPick[] = []
+  let doubleRemaining = CONFIDENCE_BUDGET.double
+  let tripleRemaining = CONFIDENCE_BUDGET.triple
+  let distributions: PickDistribution[] = []
+
+  if (user) {
+    const [{ data: events }, { data: picks }] = await Promise.all([
+      supabase.from('events').select('*').order('month').order('name'),
+      supabase.from('picks').select('*').eq('user_id', user.id),
+    ])
+
+    const pickMap = new Map<string, Pick>()
+    for (const pick of (picks ?? [])) {
+      pickMap.set(pick.event_id, pick)
+    }
+
+    eventsWithPicks = (events ?? []).map((e: Event) => ({
+      ...e,
+      user_pick: pickMap.get(e.id),
+    }))
+
+    const activePicks = picks ?? []
+    const doubleUsed = activePicks.filter(
+      (p: Pick) => p.confidence === 2 && (p.status === 'draft' || p.status === 'locked')
+    ).length
+    const tripleUsed = activePicks.filter(
+      (p: Pick) => p.confidence === 3 && (p.status === 'draft' || p.status === 'locked')
+    ).length
+    doubleRemaining = CONFIDENCE_BUDGET.double - doubleUsed
+    tripleRemaining = CONFIDENCE_BUDGET.triple - tripleUsed
+
+    // Fetch crowd distributions for events whose window is closed
+    const closedEventIds = eventsWithPicks
+      .filter(e => ['window_closed', 'result_pending', 'scored'].includes(e.status))
+      .map(e => e.id)
+
+    if (closedEventIds.length > 0) {
+      const { data: dist } = await supabase
+        .from('pick_distributions')
+        .select('*')
+        .in('event_id', closedEventIds)
+      distributions = (dist ?? []) as PickDistribution[]
+    }
+  }
+
+  const totalPicked = eventsWithPicks.filter(e => e.user_pick).length
+  const totalEvents = eventsWithPicks.length
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-950">My Picks</h1>
-          <p className="text-zinc-500 mt-1 text-sm">All your picks across Season 1</p>
+          <p className="text-zinc-500 mt-1 text-sm">Season 1 · August 2026 → July 2027</p>
         </div>
+        {totalEvents > 0 && (
+          <div className="text-sm text-zinc-500">
+            <span className="font-semibold text-zinc-950">{totalPicked}</span> / {totalEvents} picked
+          </div>
+        )}
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-1.5 bg-zinc-100 rounded-xl p-1 w-fit">
-        {FILTER_TABS.map((tab, i) => (
-          <button
-            key={tab}
-            className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              i === 0
-                ? 'bg-white text-zinc-950 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Empty state */}
-      <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
-        <div className="px-6 py-16 text-center space-y-4">
-          <div className="text-5xl">🎯</div>
-          <div className="space-y-1.5">
-            <p className="font-semibold text-zinc-950">No picks yet</p>
-            <p className="text-sm text-zinc-400 max-w-xs mx-auto leading-relaxed">
-              Pre-season picks open July 1, 2026. You'll be able to lock in your big calls before Season 1 begins.
-            </p>
-          </div>
-          <div className="pt-2">
-            <button className="rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors">
-              Browse events →
-            </button>
-          </div>
+      {totalEvents === 0 ? (
+        <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center space-y-3">
+          <p className="font-semibold text-zinc-950">No events loaded yet</p>
+          <p className="text-sm text-zinc-400 max-w-xs mx-auto">
+            Run the seed script in Supabase SQL Editor to load all 195 events.
+          </p>
         </div>
-
-        {/* Upcoming windows */}
-        <div className="border-t border-zinc-100 bg-zinc-50 divide-y divide-zinc-100">
-          <div className="px-6 py-3">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Upcoming windows</p>
-          </div>
-          {[
-            { type: 'Pre-Season', opens: 'July 1, 2026', pts: 15, style: 'bg-violet-100 text-violet-700' },
-            { type: 'August Monthly', opens: 'August 1, 2026', pts: 10, style: 'bg-blue-100 text-blue-700' },
-          ].map((w) => (
-            <div key={w.type} className="px-6 py-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${w.style}`}>{w.type}</span>
-                <span className="text-sm text-zinc-600">Opens {w.opens}</span>
-              </div>
-              <span className="text-xs font-semibold text-zinc-400">+{w.pts} pts each</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      ) : (
+        <PicksList
+          events={eventsWithPicks}
+          initialDouble={doubleRemaining}
+          initialTriple={tripleRemaining}
+          distributions={distributions}
+        />
+      )}
     </div>
   )
 }

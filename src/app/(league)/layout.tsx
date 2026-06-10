@@ -1,13 +1,25 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { signOut } from '@/app/(auth)/actions'
 
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/picks', label: 'My Picks' },
   { href: '/calendar', label: 'Calendar' },
   { href: '/leaderboard', label: 'Leaderboard' },
+  { href: '/leagues', label: 'My Leagues' },
 ]
 
-export default function LeagueLayout({ children }: { children: React.ReactNode }) {
+export default async function LeagueLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('username').eq('id', user.id).single()
+    : { data: null }
+
+  const initials = profile?.username?.slice(0, 2).toUpperCase() ?? '??'
+
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       <header className="sticky top-0 z-40 bg-white border-b border-zinc-200">
@@ -31,8 +43,18 @@ export default function LeagueLayout({ children }: { children: React.ReactNode }
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               <span className="text-xs font-medium text-amber-700">Season 1</span>
             </div>
-            <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-semibold text-zinc-600">
-              U
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-semibold text-zinc-600">
+                {initials}
+              </div>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+                >
+                  Sign out
+                </button>
+              </form>
             </div>
           </div>
         </div>

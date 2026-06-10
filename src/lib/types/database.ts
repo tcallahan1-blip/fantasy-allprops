@@ -22,6 +22,9 @@ export interface Profile {
   display_name: string | null
   avatar_url: string | null
   is_admin: boolean
+  current_streak: number
+  longest_streak: number
+  badges: string[]
   created_at: string
   updated_at: string
 }
@@ -44,6 +47,9 @@ export interface Event {
   official_result: string | null
   result_confirmed_at: string | null
   notes: string | null
+  description: string | null
+  website_url: string | null
+  options: string[] | null
   created_at: string
   updated_at: string
 }
@@ -53,6 +59,7 @@ export interface Pick {
   user_id: string
   event_id: string
   pick_value: string
+  confidence: number
   status: PickStatus
   locked_at: string | null
   points_earned: number | null
@@ -60,11 +67,16 @@ export interface Pick {
   updated_at: string
 }
 
+export const CONFIDENCE_BUDGET = { double: 15, triple: 5 } as const
+
 export interface LeaderboardEntry {
   user_id: string
   username: string
   display_name: string | null
   avatar_url: string | null
+  joined_at: string
+  current_streak: number
+  badges: string[]
   total_points: number
   total_picks: number
   correct_picks: number
@@ -78,6 +90,33 @@ export interface ScoringRule {
   base_points: number
   bonus_multiplier: number
   created_at: string
+}
+
+export interface League {
+  id: string
+  name: string
+  slug: string
+  invite_token: string
+  owner_id: string | null
+  created_at: string
+}
+
+export interface LeagueMembership {
+  league_id: string
+  user_id: string
+  joined_at: string
+}
+
+export interface LeagueWithMeta extends League {
+  member_count: number
+  is_owner: boolean
+}
+
+export interface PickDistribution {
+  event_id: string
+  pick_value: string
+  pick_count: number
+  pct: number
 }
 
 export interface PickWithEvent extends Pick {
@@ -116,3 +155,12 @@ export const CATEGORY_LABELS: Record<EventCategory, string> = {
 }
 
 export const BONUS_MULTIPLIER = 1.5
+
+/** Points earned for a scored pick. Apply after the pick is confirmed correct. */
+export function calcPoints(
+  pickType: PickType,
+  bonusWindow: boolean,
+  confidence: number = 1
+): number {
+  return PICK_TYPE_POINTS[pickType] * confidence * (bonusWindow ? BONUS_MULTIPLIER : 1)
+}
