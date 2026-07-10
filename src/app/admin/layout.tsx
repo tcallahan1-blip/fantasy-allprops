@@ -1,11 +1,24 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
 const adminLinks = [
   { href: '/admin/events', label: 'Events' },
   { href: '/admin/scoring', label: 'Scoring' },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+  if (!profile?.is_admin) redirect('/dashboard')
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-gray-100 bg-white">
