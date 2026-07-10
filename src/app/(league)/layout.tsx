@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/(auth)/actions'
+import NotificationToggle from './notifications/NotificationToggle'
 
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -43,6 +44,7 @@ export default async function LeagueLayout({ children }: { children: React.React
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               <span className="text-xs font-medium text-amber-700">Season 1</span>
             </div>
+            <NotificationToggle />
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-semibold text-zinc-600">
                 {initials}

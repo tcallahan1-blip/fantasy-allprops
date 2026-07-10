@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPushToAllUsers } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,9 +23,27 @@ export async function GET(request: Request) {
     .update({ status: 'window_open' })
     .eq('status', 'upcoming')
     .lte('pick_window_opens_at', now)
-    .select('id')
+    .select('id, name, slug, pick_type, pick_window_closes_at')
 
   if (openErr) return NextResponse.json({ error: openErr.message }, { status: 500 })
+
+  let popPropsNotified = 0
+  for (const event of opened ?? []) {
+    if (event.pick_type !== 'X') continue
+    try {
+      const closes = event.pick_window_closes_at
+        ? ` — closes ${new Date(event.pick_window_closes_at).toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })} UTC`
+        : ''
+      await sendPushToAllUsers({
+        title: `New Pop Prop: ${event.name}`,
+        body: `The pick window just opened${closes}.`,
+        url: `/events/${event.slug}`,
+      })
+      popPropsNotified++
+    } catch {
+      // Push not configured (missing VAPID env vars) or delivery failed — don't block window automation.
+    }
+  }
 
   const { data: closing, error: closingSelectErr } = await supabase
     .from('events')
@@ -60,5 +79,6 @@ export async function GET(request: Request) {
     windowsOpened: opened?.length ?? 0,
     windowsClosed: closingIds.length,
     picksLocked,
+    popPropsNotified,
   })
 }
