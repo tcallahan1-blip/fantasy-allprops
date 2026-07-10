@@ -58,6 +58,9 @@ npm run dev    # start dev server on :3000
 npm run build  # production build
 npm run lint   # ESLint
 npm run seed   # load data/season-1-events.json into Supabase (needs SUPABASE_SERVICE_ROLE_KEY)
+npm test       # run the Vitest suite once
+npm run test:watch     # Vitest in watch mode
+npm run test:coverage  # Vitest with a coverage report
 ```
 
 ## Pick window automation
@@ -90,6 +93,22 @@ subscriptions the push service reports as gone (404/410). Needs
 generate a pair with `npx web-push generate-vapid-keys`. If those env vars
 aren't set, the cron just skips sending rather than failing the whole run.
 
+## Tests
+
+Vitest (`vitest.config.ts` + `vitest.setup.ts`, which stubs `next/cache` and
+`next/navigation` since those touch request-scoped internals that don't exist
+outside a running Next.js server). `src/lib/testing/mockSupabase.ts` is a
+shared chainable/thenable stand-in for the supabase-js query builder — mock
+`createClient`/`createAdminClient` per test file, then queue return values
+with `supabase.from.mockReturnValueOnce(mockBuilder({ data, error }))` in call
+order.
+
+Covered so far: `calcPoints`, `scoreEvent` (admin gate, result validation,
+point math, streak updates), `upsertPick` / `updateConfidence` (window-status
+and confidence-budget validation), and the pick-windows cron (auth guard,
+window transitions, pick locking, Pop Prop push triggering). Not yet covered:
+`admin/events` CRUD, `leagues` actions, any UI/component-level tests.
+
 ## What's not built yet
 
-- Test suite
+- Deeper test coverage (see above)

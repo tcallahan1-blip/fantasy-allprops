@@ -68,6 +68,13 @@ Fantasy AllProps/
 
 Bonus-window events earn 1.5× when correct.
 
+## Tests
+
+```bash
+npm test            # run once
+npm run test:watch  # watch mode
+```
+
 ## Docs
 
 See [docs/league-rules.md](docs/league-rules.md) for full league rules, pick types, and verification approach.
