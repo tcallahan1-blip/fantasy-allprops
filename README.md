@@ -17,13 +17,16 @@ npm install
 
 # 2. Set up environment variables
 cp .env.local.example .env.local
-# Fill in your Supabase project URL and anon key
+# Fill in your Supabase project URL, anon key, and service role key
 
 # 3. Run database migrations
 # Install Supabase CLI: https://supabase.com/docs/guides/cli
 supabase db push
 
-# 4. Start the dev server
+# 4. Seed Season 1 events
+npm run seed
+
+# 5. Start the dev server
 npm run dev
 ```
 
@@ -48,7 +51,7 @@ Fantasy AllProps/
     │   ├── page.tsx             # Landing
     │   ├── (auth)/              # /login, /signup
     │   ├── (league)/            # /dashboard, /picks, /calendar, /leaderboard
-    │   └── (admin)/             # /admin/events, /admin/scoring
+    │   └── admin/               # /admin/events, /admin/scoring
     ├── lib/
     │   ├── supabase/            # Browser + server clients, middleware
     │   └── types/database.ts   # TypeScript types for all DB tables

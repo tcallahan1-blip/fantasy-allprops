@@ -1532,53 +1532,57 @@ const enrichments = {
 };
 
 // ---------------------------------------------------------------------------
-// Validate: make sure every event in the JSON has an entry
+// Exports (for reuse by scripts/seed.js — avoids re-deriving this data)
 // ---------------------------------------------------------------------------
 
-const eventsJson = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../data/season-1-events.json'), 'utf8')
-);
+module.exports = { enrichments, sqlEsc, renderOptions };
 
-const allSlugs = eventsJson.events.map(e => e.id);
-const missingSlugs = allSlugs.filter(slug => !(slug in enrichments));
+// ---------------------------------------------------------------------------
+// CLI: regenerate supabase/enrichments.sql
+// ---------------------------------------------------------------------------
 
-if (missingSlugs.length > 0) {
-  console.error('ERROR: Missing enrichment entries for the following slugs:');
-  missingSlugs.forEach(s => console.error('  -', s));
-  process.exit(1);
+if (require.main === module) {
+  const eventsJson = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '../data/season-1-events.json'), 'utf8')
+  );
+
+  const allSlugs = eventsJson.events.map(e => e.id);
+  const missingSlugs = allSlugs.filter(slug => !(slug in enrichments));
+
+  if (missingSlugs.length > 0) {
+    console.error('ERROR: Missing enrichment entries for the following slugs:');
+    missingSlugs.forEach(s => console.error('  -', s));
+    process.exit(1);
+  }
+
+  const outputPath = path.join(__dirname, '../supabase/enrichments.sql');
+
+  const lines = [
+    '-- Fantasy AllProps — Event Enrichments',
+    '-- Run AFTER 20260610000001_enrich_events migration',
+    '-- Adds descriptions, website URLs, and pick options to all events',
+    '',
+  ];
+
+  for (const slug of allSlugs) {
+    const e = enrichments[slug];
+    if (!e) continue; // already caught above
+
+    const desc    = sqlEsc(e.description);
+    const url     = sqlEsc(e.website_url);
+    const opts    = renderOptions(e.options);
+
+    lines.push('update public.events set');
+    lines.push(`  description = '${desc}',`);
+    lines.push(`  website_url = '${url}',`);
+    lines.push(`  options = ${opts}`);
+    lines.push(`where slug = '${sqlEsc(slug)}';`);
+    lines.push('');
+  }
+
+  fs.writeFileSync(outputPath, lines.join('\n'), 'utf8');
+
+  console.log(`✓ Wrote ${allSlugs.length} UPDATE statements to ${outputPath}`);
+  console.log(`  Slugs with options:      ${allSlugs.filter(s => enrichments[s].options !== null).length}`);
+  console.log(`  Slugs with null options: ${allSlugs.filter(s => enrichments[s].options === null).length}`);
 }
-
-// ---------------------------------------------------------------------------
-// Generate SQL
-// ---------------------------------------------------------------------------
-
-const outputPath = path.join(__dirname, '../supabase/enrichments.sql');
-
-const lines = [
-  '-- Fantasy AllProps — Event Enrichments',
-  '-- Run AFTER 20260610000001_enrich_events migration',
-  '-- Adds descriptions, website URLs, and pick options to all events',
-  '',
-];
-
-for (const slug of allSlugs) {
-  const e = enrichments[slug];
-  if (!e) continue; // already caught above
-
-  const desc    = sqlEsc(e.description);
-  const url     = sqlEsc(e.website_url);
-  const opts    = renderOptions(e.options);
-
-  lines.push('update public.events set');
-  lines.push(`  description = '${desc}',`);
-  lines.push(`  website_url = '${url}',`);
-  lines.push(`  options = ${opts}`);
-  lines.push(`where slug = '${sqlEsc(slug)}';`);
-  lines.push('');
-}
-
-fs.writeFileSync(outputPath, lines.join('\n'), 'utf8');
-
-console.log(`✓ Wrote ${allSlugs.length} UPDATE statements to ${outputPath}`);
-console.log(`  Slugs with options:      ${allSlugs.filter(s => enrichments[s].options !== null).length}`);
-console.log(`  Slugs with null options: ${allSlugs.filter(s => enrichments[s].options === null).length}`);
