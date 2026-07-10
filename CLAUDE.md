@@ -60,8 +60,17 @@ npm run lint   # ESLint
 npm run seed   # load data/season-1-events.json into Supabase (needs SUPABASE_SERVICE_ROLE_KEY)
 ```
 
+## Pick window automation
+
+`src/app/api/cron/pick-windows/route.ts`, triggered every 15 min by Vercel Cron
+(`vercel.json`), opens/closes event pick windows based on `pick_window_opens_at`
+/ `pick_window_closes_at` and locks any `draft` picks once a window closes.
+Guarded by `CRON_SECRET` (must match Vercel's `Authorization: Bearer` header).
+Note: Vercel Hobby-tier projects only run crons once a day — this needs a Pro
+plan (or an external scheduler hitting the same route) for near-real-time
+pop-prop locking.
+
 ## What's not built yet
 
-- Pick window open/close automation (cron or Supabase edge function)
 - Push notifications for pop prop windows opening
 - Test suite
