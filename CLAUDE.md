@@ -76,7 +76,20 @@ to Vercel Pro to tighten this to every 15 minutes, or point an external
 scheduler (e.g. GitHub Actions, cron-job.org) at the same route with the same
 `CRON_SECRET`.
 
+Whenever that cron opens a Pop Prop (`X`) window, it also sends a Web Push
+notification to every subscribed user (`src/lib/push.ts`) — see below.
+
+## Push notifications
+
+Standard Web Push (VAPID), not a third-party service. `NotificationToggle`
+(in the league header) registers `public/sw.js` and subscribes the browser;
+subscriptions are stored in `push_subscriptions`, keyed by push endpoint.
+`sendPushToAllUsers()` in `src/lib/push.ts` sends to all of them and prunes
+subscriptions the push service reports as gone (404/410). Needs
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` —
+generate a pair with `npx web-push generate-vapid-keys`. If those env vars
+aren't set, the cron just skips sending rather than failing the whole run.
+
 ## What's not built yet
 
-- Push notifications for pop prop windows opening
 - Test suite

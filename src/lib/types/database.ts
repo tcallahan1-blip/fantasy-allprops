@@ -112,6 +112,15 @@ export interface LeagueWithMeta extends League {
   is_owner: boolean
 }
 
+export interface PushSubscriptionRow {
+  id: string
+  user_id: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  created_at: string
+}
+
 export interface PickDistribution {
   event_id: string
   pick_value: string
