@@ -154,6 +154,21 @@ export const CATEGORY_LABELS: Record<EventCategory, string> = {
   Esports: 'Esports',
 }
 
+export const SEASON_MONTHS = [
+  'August 2026', 'September 2026', 'October 2026', 'November 2026',
+  'December 2026', 'January 2027', 'February 2027', 'March 2027',
+  'April 2027', 'May 2027', 'June 2027', 'July 2027',
+] as const
+
+export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
+  upcoming: 'Upcoming',
+  window_open: 'Window Open',
+  window_closed: 'Window Closed',
+  result_pending: 'Result Pending',
+  scored: 'Scored',
+  cancelled: 'Cancelled',
+}
+
 export const BONUS_MULTIPLIER = 1.5
 
 /** Points earned for a scored pick. Apply after the pick is confirmed correct. */
