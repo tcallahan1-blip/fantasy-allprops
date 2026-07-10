@@ -57,13 +57,11 @@ Toby is the product and league mechanics owner. Rules are in draft — mechanics
 npm run dev    # start dev server on :3000
 npm run build  # production build
 npm run lint   # ESLint
+npm run seed   # load data/season-1-events.json into Supabase (needs SUPABASE_SERVICE_ROLE_KEY)
 ```
 
-## What's not built yet (as of project init)
+## What's not built yet
 
-- Server actions for submitting picks and auth forms
-- Real Supabase data fetching in page components (all pages show placeholder state)
-- Admin auth guard (is_admin check is in DB policy but not enforced in the admin layout yet)
-- Seed script to load season-1-events.json into Supabase
 - Pick window open/close automation (cron or Supabase edge function)
 - Push notifications for pop prop windows opening
+- Test suite
